@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateIssue(task Issue) error {
+func CreateMovie(task Movie) error {
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
 		return err
@@ -22,7 +22,7 @@ func CreateIssue(task Issue) error {
 	return nil
 }
 
-func CreateMany(list []Issue) error {
+func CreateMany(list []Movie) error {
 	insertableList := make([]interface{}, len(list))
 	for i, v := range list {
 		insertableList[i] = v
@@ -39,9 +39,9 @@ func CreateMany(list []Issue) error {
 	return nil
 }
 
-func GetIssuesByCode(code string) (Issue, error) {
-	result := Issue{}
-	filter := bson.D{primitive.E{Key: "code", Value: code}}
+func GetMoviesByName(name string) (Movie, error) {
+	result := Movie{}
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
 		return result, err
@@ -54,35 +54,35 @@ func GetIssuesByCode(code string) (Issue, error) {
 	return result, nil
 }
 
-func GetAllIssues() ([]Issue, error) {
+func GetAllMovies() ([]Movie, error) {
 	filter := bson.D{{}}
-	issues := []Issue{}
+	movies := []Movie{}
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
-		return issues, err
+		return movies, err
 	}
 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
 	cur, findError := collection.Find(context.TODO(), filter)
 	if findError != nil {
-		return issues, findError
+		return movies, findError
 	}
 	for cur.Next(context.TODO()) {
-		t := Issue{}
+		t := Movie{}
 		err := cur.Decode(&t)
 		if err != nil {
-			return issues, err
+			return movies, err
 		}
-		issues = append(issues, t)
+		movies = append(movies, t)
 	}
 	cur.Close(context.TODO())
-	if len(issues) == 0 {
-		return issues, mongo.ErrNoDocuments
+	if len(movies) == 0 {
+		return movies, mongo.ErrNoDocuments
 	}
-	return issues, nil
+	return movies, nil
 }
 
-func MarkCompleted(code string) error {
-	filter := bson.D{primitive.E{Key: "code", Value: code}}
+func MarkCompleted(name string) error {
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 
 	updater := bson.D{primitive.E{Key: "$set", Value: bson.D{
 		primitive.E{Key: "completed", Value: true},
@@ -101,8 +101,8 @@ func MarkCompleted(code string) error {
 	return nil
 }
 
-func DeleteOne(code string) error {
-	filter := bson.D{primitive.E{Key: "code", Value: code}}
+func DeleteOne(name string) error {
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
 		return err

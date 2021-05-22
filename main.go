@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,98 +10,83 @@ func main() {
 	fmt.Println("Hi")
 
 	r := gin.Default()
-	r.POST("/issue", CreateIssueHandler)
-	r.POST("/issues", CreateManyIssueHandler)
-	r.GET("/issue", GetIssuesByCodeHandler)
-	r.GET("/issues", GetAllIssuesHandler)
-	r.PUT("/issues", MarkCompletedHandler)
-	r.DELETE("/issue", DeleteOneHandler)
-	r.DELETE("/issues", DeleteAllHandler)
+	r.POST("/movie", CreateMovieHandler)
+	r.POST("/movies", CreateManyMovieHandler)
+	r.GET("/movie", GetMoviesByNameHandler)
+	r.GET("/movies", GetAllMoviesHandler)
+	r.PUT("/movies", MarkCompletedHandler)
+	r.DELETE("/movie", DeleteOneHandler)
+	r.DELETE("/movies", DeleteAllHandler)
 
 	r.Run(":8000")
 
 }
 
-func CreateIssueHandler(c *gin.Context) {
+func CreateMovieHandler(c *gin.Context) {
 
-	var issue = Issue{
-		ID:          1,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Title:       "issue1",
-		Code:        "<html>",
-		Description: "Error",
-		Completed:   false,
+	var movie = Movie{
+		ID:       1,
+		Name:     "3 idiots",
+		Budget:   "10C",
+		Director: "Rajkumar Hirani",
 	}
 
-	CreateIssue(issue)
+	CreateMovie(movie)
 
 }
 
-func CreateManyIssueHandler(c *gin.Context) {
+func CreateManyMovieHandler(c *gin.Context) {
 
-	var issues = []Issue{
+	var movies = []Movie{
 		{
-			ID:          2,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			Title:       "issue1",
-			Code:        "<head>",
-			Description: "Error",
-			Completed:   false,
+			ID:       2,
+			Name:     "PK",
+			Budget:   "10C",
+			Director: "Rajkumar Hirani",
 		},
 		{
-			ID:          3,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			Title:       "issue1",
-			Code:        "<body>",
-			Description: "Error",
-			Completed:   false,
+			ID:       3,
+			Name:     "Happy new year",
+			Budget:   "10C",
+			Director: "Rajkumar Hirani",
 		},
 		{
-			ID:          4,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			Title:       "issue1",
-			Code:        "<h1>",
-			Description: "Error",
-			Completed:   false,
+			ID:       4,
+			Name:     "Bahubali",
+			Budget:   "10C",
+			Director: "Rajkumar Hirani",
 		},
 		{
-			ID:          5,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-			Title:       "issue1",
-			Code:        "<h1>",
-			Description: "Error",
-			Completed:   false,
+			ID:       5,
+			Name:     "Saho",
+			Budget:   "10C",
+			Director: "Rajkumar Hirani",
 		}}
 
-	CreateMany(issues)
+	CreateMany(movies)
 
 }
 
-func GetIssuesByCodeHandler(c *gin.Context) {
-	code := "<httml>"
-	Issue, _ := GetIssuesByCode(code)
-	c.JSON(200, Issue)
+func GetMoviesByNameHandler(c *gin.Context) {
+	name := ""
+	Movie, _ := GetMoviesByName(name)
+	c.JSON(200, Movie)
 }
 
-func GetAllIssuesHandler(c *gin.Context) {
-	Issues, _ := GetAllIssues()
-	c.JSON(200, Issues)
+func GetAllMoviesHandler(c *gin.Context) {
+	Movies, _ := GetAllMovies()
+	c.JSON(200, Movies)
 }
 
 func MarkCompletedHandler(c *gin.Context) {
-	code := "<httml>"
-	err := MarkCompleted(code)
+	name := "<httml>"
+	err := MarkCompleted(name)
 	c.JSON(200, err)
 }
 
 func DeleteOneHandler(c *gin.Context) {
-	code := "<httml>"
-	err := DeleteOne(code)
+	name := "<httml>"
+	err := DeleteOne(name)
 	c.JSON(200, err)
 }
 
