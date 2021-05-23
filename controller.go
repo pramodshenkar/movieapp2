@@ -3,40 +3,23 @@ package main
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
 	connectionhelper "github.com/pramodshenkar/movieapp2/connectionHelper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// func CreateMovie(task bson.D, c *gin.Context) error {
-// 	client, err := connectionhelper.GetMongoClient()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-// 	_, err = collection.InsertOne(context.TODO(), task)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-func AddRecord(c *gin.Context, record bson.D, collectionName string) error {
+func AddMovie(movie Movie) (*mongo.InsertOneResult, error) {
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	collection := client.Database(connectionhelper.DB).Collection(collectionName)
-	_, err = collection.InsertOne(context.TODO(), record)
+	collection := client.Database(connectionhelper.DB).Collection("movies")
+	res, err := collection.InsertOne(context.TODO(), movie)
 	if err != nil {
-		c.JSON(409, err)
-		return err
-	} else {
-		c.JSON(200, "Record Added")
+		return nil, err
 	}
-	return nil
+	return res, nil
 }
 
 func CreateMany(list []Movie) error {
@@ -56,9 +39,9 @@ func CreateMany(list []Movie) error {
 	return nil
 }
 
-func GetMoviesByName(name string) (Movie, error) {
+func GetMoviesByName(id int) (Movie, error) {
 	result := Movie{}
-	filter := bson.D{primitive.E{Key: "name", Value: name}}
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
 		return result, err
@@ -71,7 +54,7 @@ func GetMoviesByName(name string) (Movie, error) {
 	return result, nil
 }
 
-func GetAllRecords() ([]Movie, error) {
+func GetAllMovies() ([]Movie, error) {
 	filter := bson.D{{}}
 	movies := []Movie{}
 	client, err := connectionhelper.GetMongoClient()
@@ -98,55 +81,48 @@ func GetAllRecords() ([]Movie, error) {
 	return movies, nil
 }
 
-func UpdateRecord(movie Movie) error {
+func UpdateMovie(movie Movie) (*mongo.UpdateResult, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: movie.ID}}
 
 	updater := bson.D{primitive.E{Key: "$set", Value: bson.D{{Key: "name", Value: movie.Name}, {Key: "budget", Value: movie.Budget}, {Key: "director", Value: movie.Director}}}}
 
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
 
-	_, err = collection.UpdateOne(context.TODO(), filter, updater)
+	res, err := collection.UpdateOne(context.TODO(), filter, updater)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return res, nil
 }
 
-// func DeleteOne(id string) error {
-// 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-// 	client, err := connectionhelper.GetMongoClient()
-// 	if err != nil {
-// 		// return err
-// 		log.Println(err)
-// 	}
-// 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-// 	result, err := collection.DeleteOne(context.TODO(), filter)
+func DeleteOne(id int) (*mongo.DeleteResult, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	client, err := connectionhelper.GetMongoClient()
+	if err != nil {
+		return nil, err
+	}
+	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
+	res, err := collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
 
-// 	// result := Movie{}
-// 	// err = collection.FindOne(context.TODO(), filter).Decode(&result)
-
-// 	if err != nil {
-// 		// return err
-// 		log.Println(err)
-
-// 	}
-// 	return nil
-// }
-
-func DeleteAll() error {
+func DeleteAll() (*mongo.DeleteResult, error) {
 	selector := bson.D{{}} // bson.D{{}} specifies 'all documents'
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-	_, err = collection.DeleteMany(context.TODO(), selector)
+	res, err := collection.DeleteMany(context.TODO(), selector)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return res, nil
 }

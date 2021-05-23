@@ -1,16 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log"
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	connectionhelper "github.com/pramodshenkar/movieapp2/connectionHelper"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func main() {
@@ -18,13 +12,13 @@ func main() {
 
 	r := gin.Default()
 	r.POST("/movie", AddMovieHandler)
-	r.POST("/movies", CreateManyMovieHandler)
+	r.POST("/movies", AddManyMovieHandler)
 
 	r.GET("/movie", GetMoviesByNameHandler)
 	r.GET("/movies", GetAllMoviesHandler)
 
-	// r.PUT("/movie/:id", UpdateRecordHandler)
-	r.PUT("/movie", UpdateRecordHandler)
+	// r.PUT("/movie/:id", UpdateMovieHandler)
+	r.PUT("/movie", UpdateMovieHandler)
 	r.DELETE("/movie", DeleteOneHandler)
 	r.DELETE("/movies", DeleteAllHandler)
 
@@ -33,108 +27,149 @@ func main() {
 
 }
 
+//--------------- Add One Movie -------------
+
+/*
+http://localhost:8080/movie
+
+{
+			"ID":       1,
+			"Name":     "Munnabhai MBBS",
+			"Budget":   "10C",
+			"Director": "Rajkumar Hirani"
+}
+*/
 func AddMovieHandler(c *gin.Context) {
 
 	var movie Movie
 	c.Bind(&movie)
-
-	moviebson := bson.D{{Key: "_id", Value: movie.ID}, {Key: "name", Value: movie.Name}, {Key: "budget", Value: movie.Budget}, {Key: "director", Value: movie.Director}}
-	err := AddRecord(c, moviebson, "movies")
+	res, err := AddMovie(movie)
 
 	if err != nil {
-		log.Println(err)
+		c.JSON(409, err)
+	} else {
+		c.JSON(200, res)
 	}
 }
 
-func AddProducerHandler(c *gin.Context) {
-	var producer Producer
-	c.Bind(&producer)
+//--------------- Add Multiple Movie -------------
+/*
+http://localhost:8080/movies
 
-	producerbson := bson.D{{Key: "_id", Value: producer.ID}, {Key: "name", Value: producer.Name}, {Key: "address", Value: producer.Address}}
-	err := AddRecord(c, producerbson, "producer")
-
-	if err != nil {
-		log.Println(err)
+[
+	{
+		"ID": 2,
+		"Name": "PK",
+		"Budget": "10C",
+		"Director": "Rajkumar Hirani",
+	},
+	{
+		"ID": 3,
+		"Name": "Happy new year",
+		"Budget": "10C",
+		"Director": "Rajkumar Hirani",
+	},
+	{
+		"ID": 4,
+		"Name": "Bahubali",
+		"Budget": "10C",
+		"Director": "Rajkumar Hirani",
+	},
+	{
+		"ID": 5,
+		"Name": "Saho",
+		"Budget": "10C",
+		"Director": "Rajkumar Hirani",
 	}
-}
+]
 
-func CreateManyMovieHandler(c *gin.Context) {
+*/
+func AddManyMovieHandler(c *gin.Context) {
 
-	var movies = []Movie{
-		{
-			ID:       2,
-			Name:     "PK",
-			Budget:   "10C",
-			Director: "Rajkumar Hirani",
-		},
-		{
-			ID:       3,
-			Name:     "Happy new year",
-			Budget:   "10C",
-			Director: "Rajkumar Hirani",
-		},
-		{
-			ID:       4,
-			Name:     "Bahubali",
-			Budget:   "10C",
-			Director: "Rajkumar Hirani",
-		},
-		{
-			ID:       5,
-			Name:     "Saho",
-			Budget:   "10C",
-			Director: "Rajkumar Hirani",
-		}}
-
+	var movies []Movie
+	c.Bind(&movies)
 	CreateMany(movies)
-
 }
+
+//--------------- Get Movie By Id -------------
+/*
+http://localhost:8080/movie?id=2
+*/
 
 func GetMoviesByNameHandler(c *gin.Context) {
-	name, _ := http.Get("name")
+	id, _ := strconv.Atoi(c.Query("id"))
 
-	// Movie, _ := GetMoviesByName(name)
-	c.JSON(200, name)
+	Movie, err := GetMoviesByName(id)
+
+	if err != nil {
+		c.JSON(400, err)
+	} else {
+		c.JSON(200, Movie)
+	}
 }
+
+//--------------- Get All Movies -------------
+/*
+http://localhost:8080/movies
+*/
 
 func GetAllMoviesHandler(c *gin.Context) {
-	Movies, _ := GetAllRecords()
-	c.JSON(200, Movies)
+	Movies, err := GetAllMovies()
+	if err != nil {
+		c.JSON(400, err)
+	} else {
+		c.JSON(200, Movies)
+	}
 }
 
-func UpdateRecordHandler(c *gin.Context) {
+//--------------- Get Movie By Id -------------
+/*
+http://localhost:8080/movie
+
+{
+			"ID":       1,
+			"Name":     "Joker",
+			"Budget":   "10C",
+			"Director": "Ashutosh Gowarikar"
+}
+*/
+
+func UpdateMovieHandler(c *gin.Context) {
 	var movie Movie
 	c.Bind(&movie)
 
-	// moviebson := bson.D{{Key: "_id", Value: movie.ID}, {Key: "name", Value: movie.Name}, {Key: "budget", Value: movie.Budget}, {Key: "director", Value: movie.Director}}
-	// err := AddRecord(c, moviebson, "movies")
-
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-
-	error := UpdateRecord(movie)
-	c.JSON(200, error)
-
+	res, err := UpdateMovie(movie)
+	if err != nil {
+		c.JSON(400, err)
+	} else {
+		c.JSON(200, res)
+	}
 }
+
+//-------------- Get Movie By Id -------------
+/*
+http://localhost:8080/movie?id=2
+*/
 
 func DeleteOneHandler(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Query("id"))
-
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	client, err := connectionhelper.GetMongoClient()
+	res, err := DeleteOne(id)
 	if err != nil {
-		log.Println(err)
+		c.JSON(400, err)
+	} else {
+		c.JSON(200, res)
 	}
-	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-	res, err := collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		log.Println(err)
-	}
-	c.JSON(200, res)
 }
 
+//-------------- Get Movie By Id -------------
+/*
+http://localhost:8080/movies
+*/
 func DeleteAllHandler(c *gin.Context) {
-	movie := DeleteAll()
-	c.JSON(200, movie)
+	res, err := DeleteAll()
+	if err != nil {
+		c.JSON(400, err)
+	} else {
+		c.JSON(200, res)
+	}
 }
