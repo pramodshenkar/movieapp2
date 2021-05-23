@@ -3,21 +3,38 @@ package main
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
 	connectionhelper "github.com/pramodshenkar/movieapp2/connectionHelper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func CreateMovie(task Movie) error {
+// func CreateMovie(task bson.D, c *gin.Context) error {
+// 	client, err := connectionhelper.GetMongoClient()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
+// 	_, err = collection.InsertOne(context.TODO(), task)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func AddRecord(c *gin.Context, record bson.D, collectionName string) error {
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
 		return err
 	}
-	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-	_, err = collection.InsertOne(context.TODO(), task)
+	collection := client.Database(connectionhelper.DB).Collection(collectionName)
+	_, err = collection.InsertOne(context.TODO(), record)
 	if err != nil {
+		c.JSON(409, err)
 		return err
+	} else {
+		c.JSON(200, "Record Added")
 	}
 	return nil
 }
@@ -54,7 +71,7 @@ func GetMoviesByName(name string) (Movie, error) {
 	return result, nil
 }
 
-func GetAllMovies() ([]Movie, error) {
+func GetAllRecords() ([]Movie, error) {
 	filter := bson.D{{}}
 	movies := []Movie{}
 	client, err := connectionhelper.GetMongoClient()
@@ -81,12 +98,10 @@ func GetAllMovies() ([]Movie, error) {
 	return movies, nil
 }
 
-func MarkCompleted(name string) error {
-	filter := bson.D{primitive.E{Key: "name", Value: name}}
+func UpdateRecord(movie Movie) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: movie.ID}}
 
-	updater := bson.D{primitive.E{Key: "$set", Value: bson.D{
-		primitive.E{Key: "completed", Value: true},
-	}}}
+	updater := bson.D{primitive.E{Key: "$set", Value: bson.D{{Key: "name", Value: movie.Name}, {Key: "budget", Value: movie.Budget}, {Key: "director", Value: movie.Director}}}}
 
 	client, err := connectionhelper.GetMongoClient()
 	if err != nil {
@@ -101,19 +116,26 @@ func MarkCompleted(name string) error {
 	return nil
 }
 
-func DeleteOne(name string) error {
-	filter := bson.D{primitive.E{Key: "name", Value: name}}
-	client, err := connectionhelper.GetMongoClient()
-	if err != nil {
-		return err
-	}
-	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
-	_, err = collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func DeleteOne(id string) error {
+// 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+// 	client, err := connectionhelper.GetMongoClient()
+// 	if err != nil {
+// 		// return err
+// 		log.Println(err)
+// 	}
+// 	collection := client.Database(connectionhelper.DB).Collection(connectionhelper.ISSUES)
+// 	result, err := collection.DeleteOne(context.TODO(), filter)
+
+// 	// result := Movie{}
+// 	// err = collection.FindOne(context.TODO(), filter).Decode(&result)
+
+// 	if err != nil {
+// 		// return err
+// 		log.Println(err)
+
+// 	}
+// 	return nil
+// }
 
 func DeleteAll() error {
 	selector := bson.D{{}} // bson.D{{}} specifies 'all documents'

@@ -22,7 +22,7 @@ var mongoOnce sync.Once
 const (
 	CONNECTIONSTRING = "mongodb://localhost:27017"
 	DB               = "db_issue_manager"
-	ISSUES           = "col_issues"
+	ISSUES           = "movies"
 )
 
 //GetMongoClient - Return mongodb connection to work with
